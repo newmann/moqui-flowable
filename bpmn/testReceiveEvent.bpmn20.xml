@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:flowable="http://flowable.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.flowable.org/processdef">
+  <process id="receiveEventTest" name="Process to test events">
+    <sequenceFlow id="flow1" sourceRef="theStart" targetRef="theTask"/>
+    <serviceTask id="theTask" name="my task" flowable:expression="#{Logger.log(execution, var:get(serviceName))}"/>
+    <sequenceFlow id="flow2" sourceRef="theTask" targetRef="theEnd"/>
+    <endEvent id="theEnd"/>
+    <sequenceFlow id="flow11" sourceRef="theStart" targetRef="theTask" name="Start to Task"/>
+    <sequenceFlow id="flow12" sourceRef="theTask" targetRef="theEnd" name="Task to End"/>
+    <startEvent id="theStart">
+      <extensionElements>
+        <flowable:eventType>moquiServiceEvent</flowable:eventType>
+        <flowable:eventOutParameter source="serviceName" sourceType="string" target="serviceName"/>
+        <flowable:eventOutParameter source="businessKey" sourceType="string" target="businessKey"/>
+<!--        <flowable:channelType><![CDATA[rabbitmq]]></flowable:channelType>-->
+
+      </extensionElements>
+    </startEvent>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_receiveEventTest">
+    <bpmndi:BPMNPlane bpmnElement="receiveEventTest" id="BPMNPlane_receiveEventTest">
+      <bpmndi:BPMNShape id="BPMNShape_theStart" bpmnElement="theStart">
+        <omgdc:Bounds x="-1508.07" y="-1245.6401" width="30.0" height="30.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_theEnd" bpmnElement="theEnd">
+        <omgdc:Bounds x="-1257.07" y="-1181.1401" width="30.0" height="30.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_theTask" bpmnElement="theTask">
+        <omgdc:Bounds x="-1379.07" y="-1176.8901" width="39.0" height="21.5"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge-fe890563-97bd-4af4-8d2c-d31b76b9e100" bpmnElement="flow11">
+        <omgdi:waypoint x="-1478.0698" y="-1166.1401"/>
+        <omgdi:waypoint x="-1379.07" y="-1166.1401"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge-985da051-b034-45df-87e1-4bed165aaf56" bpmnElement="flow12">
+        <omgdi:waypoint x="-1340.07" y="-1166.1401"/>
+        <omgdi:waypoint x="-1257.07" y="-1166.1401"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="shape-9719fc07-0ea6-4d37-95a8-6c0e66d7d215" bpmnElement="theStart">
+        <omgdc:Bounds x="-1508.0698" y="-1181.1401" width="30.0" height="30.0"/>
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

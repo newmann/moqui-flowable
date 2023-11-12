@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+    <service verb="get" noun="EventAndChannelFileList">
+        <in-parameters>
+            <parameter name="componentName"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="fileList" type="List"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                //        1、先找到所有的component
+//        2、查找每个component下面的bpmn路径下所有的文件
+//        3、根据process id，匹配flowable repository中对应的引擎，看是否需要重新发布
+                componentList = ec.factory.getComponentBaseLocations()
+                fileList = []
+                for (component in componentList) {
+                    if(componentName){
+                        //只查询指定component的文件
+                        if(componentName.toLowerCase() != component.key.toLowerCase()) continue
+                    }
+                    componentResource = ec.resource.getLocationReference(component.value + "/rabbitmq")
+
+                    childList = componentResource.getChildren()
+                    if (childList && childList.size() > 0) {
+                        for (child in childList) {
+                            if(child.getLocation().endsWith("event")){
+                                fileList.add([componentName: component.key, filePath: child.getLocation(), type:"event"])
+                            }
+                            if( child.getLocation().endsWith("channel") ){
+                                fileList.add([componentName: component.key, filePath: child.getLocation(), type:"channel"])
+                            }
+                        }
+                    }
+
+                }
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="valid" noun="Event">
+        <description>验证Event文件是否正确</description>
+        <in-parameters>
+            <parameter name="resourceName" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="validResult" type="Boolean"/>
+            <parameter name="validMessage" type="String"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.eventregistry.json.converter.EventJsonConverter
+                import org.moqui.resource.ResourceReference
+
+                validResult = true
+
+                try {
+                    ResourceReference  resource = ec.resource.getLocationReference(resourceName)
+
+                    EventJsonConverter eventJsonConverter = new EventJsonConverter()
+                    eventJsonConverter.convertToEventModel(resource.getText())
+
+                } catch (Exception ex){
+                    validResult = false
+                    validMessage = ex.getMessage()
+                }
+
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="valid" noun="Channel">
+        <description>验证Channel文件是否正确</description>
+        <in-parameters>
+            <parameter name="resourceName" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="validResult" type="Boolean"/>
+            <parameter name="validMessage" type="String"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.eventregistry.json.converter.ChannelJsonConverter
+                import org.moqui.resource.ResourceReference
+
+                validResult = true
+
+                try {
+                    ResourceReference resource = ec.resource.getLocationReference(resourceName)
+                    ChannelJsonConverter converter = new ChannelJsonConverter()
+                    converter.convertToChannelModel(resource.getText())
+
+                } catch (Exception ex) {
+                    validResult = false
+                    validMessage = ex.getMessage()
+                }
+                ]]></script>
+        </actions>
+    </service>
+</services>

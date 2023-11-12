@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- No copyright or license for configuration file, details here are not considered a creative work. -->
+<moqui-conf xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/moqui-conf-3.xsd">
+
+    <tools>
+        <tool-factory class="org.moqui.flowable.FlowableToolFactory" init-priority="25" disabled="false"/>
+    </tools>
+
+    <screen-facade>
+        <screen location="component://webroot/screen/webroot/apps.xml">
+            <subscreens-item name="MoquiFlowable" menu-title="Moqui Flowable Tools" menu-index="190" location="component://moqui-flowable/screen/Workflow.xml"/>
+        </screen>
+        <screen location="component://webroot/screen/webroot/apps.xml">
+            <subscreens-item name="MyTask" menu-title="My Task" menu-index="91" location="component://moqui-flowable/screen/MyTask.xml"/>
+        </screen>
+
+    </screen-facade>
+</moqui-conf>

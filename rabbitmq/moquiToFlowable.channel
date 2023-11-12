@@ -1,0 +1,16 @@
+{
+    "key": "moquiToFlowableChannel",
+    "category": "moqui",
+    "name": "Moqui to Flowable channel",
+    "description": "Receive call moqui service results channel",
+    "channelType": "inbound",
+    "type": "rabbit",
+    "queues": ["moqui.to.flowable"],
+    "deserializerType": "json",
+    "channelEventKeyDetection": {
+        "jsonField": "eventKey"
+    },
+    "channelEventTenantIdDetection": {
+        "jsonPointerExpression": "/tenantId"
+    }
+}

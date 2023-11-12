@@ -1,0 +1,21 @@
+{
+    "key": "testEvent",
+    "name": "Test event",
+    "payload": [
+        {
+            "name": "customerName",
+            "type": "string",
+            "correlationParameter":false
+        },
+        {
+            "name": "foo",
+            "type": "string",
+            "correlationParameter":false
+        },
+        {
+            "name": "amount",
+            "type": "integer",
+            "correlationParameter":false
+        }
+    ]
+}

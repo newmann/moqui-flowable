@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans   http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <bean id="dataSource" class="org.flowable.common.engine.impl.test.ClosingDataSource">
+    <constructor-arg>
+      <bean class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+        <constructor-arg>
+          <bean class="com.zaxxer.hikari.HikariConfig">
+            <property name="jdbcUrl" value="jdbc:postgresql://localhost:5432/flowable"/>
+            <property name="driverClassName" value="org.postgresql.Driver"/>
+            <property name="username" value="flowable"/>
+            <property name="password" value="flowable"/>
+          </bean>
+        </constructor-arg>
+      </bean>
+    </constructor-arg>
+  </bean>
+
+<!--  <bean id="eventRegistryConfigurator" class="org.flowable.eventregistry.spring.configurator.SpringEventRegistryConfigurator"/>-->
+
+  <bean id="processEngineConfiguration" class="org.flowable.engine.impl.cfg.StandaloneProcessEngineConfiguration">
+
+    <property name="dataSource" ref="dataSource"/>
+
+    <property name="engineLifecycleListeners">
+      <list>
+        <ref bean="dataSource"/>
+      </list>
+    </property>
+    
+    <!-- Database configurations -->
+    <property name="databaseSchemaUpdate" value="true" />
+    
+    <!-- job executor configurations -->
+    <property name="asyncExecutorActivate" value="false" />
+    <property name="asyncExecutorDefaultAsyncJobAcquireWaitTime" value="1000" />
+    <property name="asyncExecutorDefaultTimerJobAcquireWaitTime" value="1000" />
+    
+    <property name="defaultFailedJobWaitTime" value="1" />
+    <property name="asyncFailedJobWaitTime" value="1" />
+    
+    <property name="enableEntityLinks" value="true" />
+    
+    <!-- mail server configurations -->
+    <property name="mailServerPort" value="5025" />    
+    
+    <property name="mailServers">
+      <map>
+        <entry key="myEmailTenant">
+          <bean class="org.flowable.common.engine.impl.cfg.mail.MailServerInfo">
+            <property name="mailServerHost" value="localhost" />
+            <property name="mailServerPort" value="5025" />
+            <property name="mailServerUseSSL" value="false" />
+            <property name="mailServerUseTLS" value="false" />
+            <property name="mailServerDefaultFrom" value="activiti@myTenant.com" />
+            <property name="mailServerUsername" value="activiti@myTenant.com" />
+            <property name="mailServerPassword" value="password" />
+          </bean>
+        </entry>
+      </map>
+    </property>
+    
+    <property name="enableProcessDefinitionHistoryLevel" value="true" />
+    <property name="enableProcessDefinitionInfoCache" value="true" />
+    <property name="enableHistoricTaskLogging" value="true"/>
+<!--    <property name="disableEventRegistry" value="true"/>-->
+<!--    <property name="eventRegistryConfigurator" ref="eventRegistryConfigurator"/>-->
+
+
+  </bean>
+
+  <bean id="throwCustomExceptionBean" class="org.flowable.engine.test.bpmn.event.error.mapError.ThrowCustomExceptionBean" />
+  <bean id="throwCustomExceptionDelegate" class="org.flowable.engine.test.bpmn.event.error.mapError.ThrowCustomExceptionDelegate" />
+  <bean id="setVariableExpression" class="org.flowable.engine.test.bpmn.event.variable.SetVariableExpression" />
+
+<!--  用于flowable：expression-->
+  <bean id="Logger" class="org.moqui.flowable.Logger"/>
+
+  <bean id="appEngineConfiguration" class="org.flowable.app.engine.AppEngineConfiguration">
+    <property name="dataSource" ref="dataSource" />
+    <property name="databaseSchemaUpdate" value="true" />
+    <property name="engineLifecycleListeners">
+      <list>
+        <ref bean="dataSource" />
+      </list>
+    </property>
+    <property name="disableEventRegistry" value="true"/>
+    <property name="disableIdmEngine" value="true"/>
+  </bean>
+
+<!--  &lt;!&ndash; This bean is needed in context xml in order for the jdbc properties to work &ndash;&gt;-->
+<!--  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" />-->
+
+<!--  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">-->
+<!--    <property name="dataSource" ref="dataSource"/>-->
+<!--  </bean>-->
+
+<!--  <bean id="eventEngineConfiguration" class="org.flowable.eventregistry.spring.SpringEventRegistryEngineConfiguration">-->
+<!--    <property name="dataSource" ref="dataSource"/>-->
+<!--    <property name="transactionManager" ref="transactionManager"/>-->
+<!--    <property name="databaseSchemaUpdate" value="true"/>-->
+<!--    <property name=""-->
+<!--  </bean>-->
+
+<!--  <rabbit:connection-factory id="flowableEventRegistryConnectionFactory" virtual-host="moqui"/>-->
+<!--  <bean id="rabbitListenerEndpointRegistry" class="org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry"/>-->
+<!--  <bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>-->
+<!--  <bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.Jackson2JsonMessageConverter"/>-->
+<!--  <rabbit:template id="rabbitTemplate" connection-factory="flowableEventRegistryConnectionFactory" message-converter="jsonMessageConverter"/>-->
+
+<!--  <bean id ="rabbitChannelDefinitionProcessor" class="org.flowable.eventregistry.spring.rabbit.RabbitChannelDefinitionProcessor">-->
+<!--    <property name="objectMapper" ref="objectMapper"/>-->
+<!--    <property name="endpointRegistry" ref="rabbitListenerEndpointRegistry"/>-->
+<!--    <property name="rabbitOperations" ref="rabbitTemplate"/>-->
+<!--  </bean>-->
+
+<!--  <bean id="eventRegistryEngine" class="org.flowable.eventregistry.spring.EventRegistryFactoryBean">-->
+<!--    <property name="eventEngineConfiguration" ref="eventEngineConfiguration"/>-->
+<!--  </bean>-->
+
+<!--  <bean id="eventRepositoryService" factory-bean="eventRegistryEngine" factory-method="getEventRepositoryService"/>-->
+</beans>

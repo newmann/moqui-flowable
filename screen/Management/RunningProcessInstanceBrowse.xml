@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Running Process Instance Browse" default-menu-index="1">
+
+    <transition name="deleteProcessInstance">
+        <service-call name="org.moqui.flowable.RuntimeServices.delete#ProcessInstance" in-map="context" out-map="context"/>
+        <default-response url="."/>
+    </transition>
+
+
+    <transition name="detail"><default-response url="../BPMNDetail"/></transition>
+
+    <actions>
+        <set field="pageSize" from="pageSize ?: 40"/>
+        <service-call name="org.moqui.flowable.RuntimeServices.get#AllRunningProcessInstanceList" in-map="context" out-map="context"/>
+        <script>
+            paginateList("instanceList", null, context)
+        </script>
+    </actions>
+    <widgets>
+
+        <form-single name="FilterForm" transition=".">
+            <field name="filterRegexp"><default-field><text-line size="30"/></default-field></field>
+            <field name="viewOption"><default-field title="View Option">
+                <drop-down>
+                    <option key="all" text="All Entities"/>
+                    <option key="master" text="Master Entities"/>
+                    <option key="exclude-views" text="Exclude View Entities"/>
+                </drop-down>
+            </default-field></field>
+            <field name="submitButton"><default-field title="Filter"><submit/></default-field></field>
+            <field-layout><field-row-big><field-ref name="filterRegexp"/><field-ref name="viewOption"/>
+                <field-ref name="submitButton"/></field-row-big></field-layout>
+        </form-single>
+
+        <form-list name="ProcessListFormList" list="instanceList">
+            <field name="instanceId">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+
+            <field name="processDefinitionId">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="processDefinitionName">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="processDefinitionKey">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="processDefinitionVersion">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="deploymentId">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="businessKey">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="businessStatus">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="suspended">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="ended">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="tenantId">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="name">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="description">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="startTime">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="startUserId">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="callbackId">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="callbackId">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="callbackType">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="processVariables">
+                <header-field show-order-by="true"/>
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="delete">
+                <header-field show-order-by="true"/>
+                <default-field>
+                    <link url="deleteProcessInstance" text="Delete" parameter-map="[processInstanceId:instanceId]"/>
+                </default-field>
+            </field>
+
+        </form-list>
+    </widgets>
+</screen>

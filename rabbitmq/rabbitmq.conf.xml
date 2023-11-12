@@ -1,0 +1,31 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/rabbit
+           https://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+           http://www.springframework.org/schema/beans
+           https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <rabbit:connection-factory id="flowableConnectionFactory" virtual-host="moqui"/>
+
+    <bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.Jackson2JsonMessageConverter"/>
+    <rabbit:template id="flowableAmqpTemplate" connection-factory="flowableConnectionFactory" message-converter="jsonMessageConverter"/>
+
+    <rabbit:admin id="flowableRabbitAdmin" connection-factory="flowableConnectionFactory"/>
+    <rabbit:queue name="flowable.to.moqui" />
+    <rabbit:queue name="moqui.to.flowable"/>
+
+    <rabbit:topic-exchange name="flowable.moqui">
+        <rabbit:bindings>
+            <rabbit:binding pattern="flowable.to.moqui.#" queue="flowable.to.moqui"/>
+            <rabbit:binding pattern="moqui.to.flowable.#" queue="moqui.to.flowable"/>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+
+    <bean id="flowableToMoquiMessageListener" class="org.moqui.flowable.FlowableToMoquiMessageListener"/>
+
+    <rabbit:listener-container connection-factory="flowableConnectionFactory">
+        <rabbit:listener queues="flowable.to.moqui" ref="flowableToMoquiMessageListener" />
+    </rabbit:listener-container>
+
+</beans>

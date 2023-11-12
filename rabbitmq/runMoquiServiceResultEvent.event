@@ -1,0 +1,32 @@
+{
+    "key": "runMoquiServiceResultEvent",
+    "name": "Run Moqui service result event",
+    "correlationParameters": [
+        {
+            "name": "businessKey",
+            "type": "string"
+        }
+    ],
+    "payload": [
+        {
+            "name": "eventKey",
+            "type": "string"
+        },
+        {
+            "name": "businessKey",
+            "type": "string"
+        },
+        {
+            "name": "serviceName",
+            "type": "string"
+        },
+        {
+            "name": "runResult",
+            "type": "boolean"
+        },
+        {
+            "name": "jsonResultMsg",
+            "type": "string"
+        }
+    ]
+}

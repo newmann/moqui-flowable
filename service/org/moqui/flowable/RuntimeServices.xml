@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+    <service verb="run" noun="ProcessByKey">
+        <in-parameters>
+            <parameter name="processKey" required="true">
+                <description>BPMN 文档中定义的id，不是flowable中的processId，对应到process key </description>
+            </parameter>
+            <parameter name="businessKey"/>
+            <parameter name="jsonForProcessVariables" type="String">
+                <description>启动流程时传入的参数</description>
+            </parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="processInstanceId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.common.engine.impl.identity.Authentication
+                import org.flowable.engine.ProcessEngine
+                import org.flowable.engine.runtime.ProcessInstance
+                import org.flowable.engine.runtime.ProcessInstanceBuilder
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.engine.RuntimeService
+
+                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                RuntimeService runtimeService = flowableEngine.getRuntimeService()
+
+
+                Map<String, Object> variables = null
+                if (jsonForProcessVariables) {
+                    variables = new groovy.json.JsonSlurper().parseText(jsonForProcessVariables)
+                }
+
+                ProcessInstanceBuilder processInstanceBuilder = runtimeService.createProcessInstanceBuilder()
+
+                processInstanceBuilder.processDefinitionKey(processKey)
+                if(businessKey) processInstanceBuilder.businessKey(businessKey)
+                if(variables) processInstanceBuilder.variables(variables)
+
+                Authentication.setAuthenticatedUserId(ec.user.username)
+                try{
+                    ProcessInstance processInstance = processInstanceBuilder.start()
+                    processInstanceId = processInstance.getId()
+                }finally{
+                    Authentication.setAuthenticatedUserId(null)
+                }
+
+
+//
+//                if (businessKey) {
+//                    if (variables) {
+//                        processInstance = runtimeService.startProcessInstanceByKey(processKey, businessKey, variables)
+//                    } else {
+//                        processInstance = runtimeService.startProcessInstanceByKey(processKey, businessKey)
+//                    }
+//                } else {
+//                    if (variables) {
+//                        processInstance = runtimeService.startProcessInstanceByKey(processKey, variables)
+//                    } else {
+//                        processInstance = runtimeService.startProcessInstanceByKey(processKey)
+//                    }
+//
+//                }
+//
+
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="run" noun="ProcessByEvent">
+        <in-parameters>
+            <parameter name="eventName" required="true">
+                <description>定义的event key </description>
+            </parameter>
+            <parameter name="payload" />
+        </in-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.app.api.AppRepositoryService
+                import org.flowable.app.api.repository.AppDefinition
+                import org.flowable.app.api.repository.AppDeployment
+                import org.flowable.app.engine.AppEngine
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.engine.ProcessEngine
+                import org.flowable.engine.runtime.ProcessInstance
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.engine.RuntimeService
+
+
+                AppEngine appEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).appEngine
+                AppRepositoryService repositoryService = appEngine.getAppRepositoryService()
+
+                List<AppDeployment> deploymentList = repositoryService.createDeploymentQuery().list()
+                ec.logger.info("deploymentList : " +
+                        deploymentList.toString())
+
+                List<AppDefinition> definitionList = repositoryService.createAppDefinitionQuery().list()
+                for(definition in definitionList){
+                    ec.logger.info("definition : " +
+                            " name: " + definition.name +
+                            " key: " + definition.key +
+                            " resourceName: " + definition.resourceName +
+                            " version: " + definition.version
+                    )
+                }
+
+
+//                InboundChannelModel inboundChannelModel = new InboundChannelModel()
+//                eventRegistry.eventReceived(inboundChannelModel, eventName)
+
+                //                ProcessInstance startProcessInstanceByMessage(String messageName);
+//                ProcessInstance startProcessInstanceByMessage(String messageName, Map<String, Object> processVariables);
+//                ProcessInstance startProcessInstanceByMessage(String messageName, String businessKey,
+//                                                              Map<String, Object> processVariables);
+
+//                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+//                RuntimeService runtimeService = flowableEngine.getRuntimeService()
+//                if (payload) {
+//                    ProcessInstance processInstance = runtimeService.startProcessInstanceByMessage(eventName,
+//                            new groovy.json.JsonSlurper().parseText(payload))
+//                } else {
+//                    ProcessInstance processInstance = runtimeService.startProcessInstanceByMessage(eventName)
+//                }
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="get" noun="AllRunningProcessInstanceList">
+        <out-parameters>
+            <parameter name="instanceList" type="List">
+                <parameter name="instance" type="Map">
+                    <parameter name="instanceId"/>
+                    <parameter name="processDefinitionId"/>
+                    <parameter name="processDefinitionName"/>
+                    <parameter name="processDefinitionKey"/>
+                    <parameter name="processDefinitionVersion"/>
+                    <parameter name="deploymentId"/>
+                    <parameter name="businessKey"/>
+                    <parameter name="businessStatus"/>
+                    <parameter name="suspended" type="Boolean"/>
+                    <parameter name="ended" type="Boolean"/>
+                    <parameter name="tenantId"/>
+                    <parameter name="name"/>
+                    <parameter name="description"/>
+                    <parameter name="startTime" type="Date"/>
+                    <parameter name="startUserId"/>
+                    <parameter name="callbackId"/>
+                    <parameter name="callbackType"/>
+                    <parameter name="processVariables"/>
+                </parameter>
+            </parameter>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.engine.runtime.ProcessInstance
+                import org.flowable.engine.runtime.ProcessInstanceQuery
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.engine.ProcessEngine
+                import org.flowable.engine.runtime.Execution
+                import org.flowable.engine.runtime.ExecutionQuery
+                import org.flowable.engine.RuntimeService
+                import groovy.json.JsonOutput
+                import groovy.json.JsonGenerator.Options
+
+                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                RuntimeService runtimeService = flowableEngine.getRuntimeService()
+
+
+                ProcessInstanceQuery instanceQuery = runtimeService.createProcessInstanceQuery()
+//                        .startedBefore(new Date())
+                List<ProcessInstance> processInstanceList = instanceQuery.list()
+                instanceList = []
+
+                if (processInstanceList) {
+                    for (processInstance in processInstanceList) {
+                        Map processVariables = processInstance.getProcessVariables()
+//                        ec.logger.info("processVariables.serviceName:" +processVariables.get("serviceName").toString())
+
+                        String jsonProcessVariables = ''
+                        if(processVariables){
+                            jsonProcessVariables =  new Options().disableUnicodeEscaping().build().toJson(processVariables)
+                        }
+                        instanceList.add([
+                                instanceId: processInstance.getId(),
+                                processDefinitionId: processInstance.getProcessDefinitionId(),
+                                         processDefinitionName: processInstance.getProcessDefinitionName(),
+                                         processDefinitionKey: processInstance.getProcessDefinitionKey(),
+                                         processDefinitionVersion: processInstance.getProcessDefinitionVersion(),
+                                         deploymentId: processInstance.getDeploymentId(),
+                                         businessKey: processInstance.getBusinessKey(),
+                                         businessStatus: processInstance.getBusinessKey(),
+                                         suspended: processInstance.isSuspended(),
+                                         ended: processInstance.isEnded(),
+                                         tenantId: processInstance.getTenantId(),
+                                         name: processInstance.getName(),
+                                         description: processInstance.getDescription(),
+                                         startTime: processInstance.getStartTime(),
+                                         startUserId: processInstance.getStartUserId(),
+                                         callbackId: processInstance.getCallbackId(),
+                                         callbackType:processInstance.getCallbackType(),
+                                         processVariables: jsonProcessVariables
+                        ])
+                    }
+                }
+//                ec.logger.info("instanceList: " + processList.toString())
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="get" noun="AllRunningExecuteList">
+        <out-parameters>
+            <parameter name="instanceList" type="List">
+                <parameter name="instance" type="Map">
+                    <parameter name="id"/>
+                    <parameter name="suspended"/>
+                    <parameter name="ended"/>
+                    <parameter name="activityId"/>
+                    <parameter name="processInstanceId"/>
+                    <parameter name="parentId"/>
+                    <parameter name="superExecutionId"/>
+                    <parameter name="rootProcessInstanceId"/>
+                    <parameter name="tenantId"/>
+                    <parameter name="name"/>
+                    <parameter name="description"/>
+                    <parameter name="referenceId"/>
+                    <parameter name="referenceType"/>
+                    <parameter name="propagatedStageInstanceId"/>
+                    <parameter name="jsonVariables"/>
+
+                </parameter>
+            </parameter>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.engine.ProcessEngine
+                import org.flowable.engine.runtime.Execution
+                import org.flowable.engine.runtime.ExecutionQuery
+                import org.flowable.engine.RuntimeService
+                import groovy.json.JsonOutput
+                import groovy.json.JsonGenerator.Options
+
+                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                RuntimeService runtimeService = flowableEngine.getRuntimeService()
+
+
+                ExecutionQuery instanceQuery = runtimeService.createExecutionQuery()
+//                        .startedBefore(new Date())
+                List<Execution> processInstanceList = instanceQuery.list()
+
+                instanceList = []
+
+                if(processInstanceList){
+                    for(processInstance in processInstanceList){
+                        Map instanceVariable = runtimeService.getVariables(processInstance.id)
+                        String jsonVariables = ''
+                        if(instanceVariable){
+                            jsonVariables =  new Options().disableUnicodeEscaping().build().toJson(instanceVariable)
+                        }
+                        instanceList.add([
+                                id: processInstance.getId(),
+                                suspended: processInstance.isSuspended(),
+                                ended: processInstance.isEnded(),
+                                activityId: processInstance.getActivityId(),
+                                processInstanceId: processInstance.getProcessInstanceId(),
+                                superExecutionId: processInstance.getSuperExecutionId(),
+                                rootProcessInstanceId: processInstance.getRootProcessInstanceId(),
+                                tenantId: processInstance.getTenantId(),
+                                name: processInstance.getName(),
+                                description: processInstance.getDescription(),
+                                referenceId: processInstance.getReferenceId(),
+                                referenceType: processInstance.getReferenceType(),
+                                propagatedStageInstanceId: processInstance.getPropagatedStageInstanceId(),
+                                jsonVariables:jsonVariables
+
+
+                        ])
+                    }
+                }
+//                ec.logger.info("instanceList: " + processList.toString())
+
+                ]]></script>
+        </actions>
+    </service>
+
+    <service verb="get" noun="ProcessInstanceFlowChart">
+        <in-parameters>
+            <parameter name="processInstanceId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="flowChart" type="List">
+            </parameter>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.engine.ProcessEngine
+                import org.flowable.engine.runtime.Execution
+                import org.flowable.engine.runtime.ExecutionQuery
+                import org.flowable.engine.runtime.ProcessInstance
+                import org.flowable.engine.RuntimeService
+                import org.flowable.engine.HistoryService
+                import org.flowable.engine.RepositoryService
+
+                import org.flowable.engine.history.HistoricActivityInstanceQuery
+                import org.flowable.engine.history.HistoricActivityInstance
+                import org.flowable.engine.history.HistoricProcessInstance
+                import org.flowable.bpmn.model.BpmnModel
+
+                import org.flowable.image.impl.DefaultProcessDiagramGenerator
+                import org.moqui.resource.ResourceReference
+
+                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                RuntimeService runtimeService = flowableEngine.getRuntimeService()
+                HistoryService historyService = flowableEngine.getHistoryService()
+                RepositoryService repositoryService = flowableEngine.getRepositoryService()
+
+//                ExecutionQuery instanceQuery = runtimeService.createExecutionQuery()
+////                        .startedBefore(new Date())
+//                List<Execution> processInstanceList = instanceQuery.list()
+//                processList = []
+
+
+                ProcessInstance processInstance = runtimeService.createProcessInstanceQuery()
+                        .processInstanceId(processInstanceId)
+                        .singleResult()
+                if (processInstance == null) {
+                    HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery()
+                            .processInstanceId(processInstanceId).singleResult()
+                    processDefineId = historicProcessInstance.getProcessDefinitionId()
+
+                } else {
+
+                    processDefineId = processInstance.getProcessDefinitionId()
+                }
+
+                BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefineId)
+                ec.logger.info("Process Define Id:" + processDefineId)
+
+                // 创建默认的流程图生成器
+                DefaultProcessDiagramGenerator defaultProcessDiagramGenerator = new DefaultProcessDiagramGenerator()
+                ec.logger.info("init DefaultProcessDiagramGenerator.")
+
+                String imageType = "png" // 生成图片的类型
+                List<String> highLightedActivities = new ArrayList<>() // 高亮节点集合
+                List<String> highLightedFlows = new ArrayList<>() // 高亮连线集合
+//                if(historyService == null){ ec.logger.error("historyService is null ")}
+//                else(ec.logger.error("historyService is : " + historyService.toString()))
+
+                List<HistoricActivityInstance> hisActInsList = historyService.createHistoricActivityInstanceQuery()
+                        .processInstanceId(processInstanceId)
+                        .list() // 查询所有历史节点信息
+                if(hisActInsList == null){ ec.logger.error("hisActInsList is null ")}
+                else(ec.logger.info("hisActInsList is : " + hisActInsList.toString()))
+
+                hisActInsList.forEach(historicActivityInstance -> {
+                    // 遍历
+                    if("sequenceFlow".equals(historicActivityInstance.getActivityType())) {
+
+                        // 添加高亮连线
+                        highLightedFlows.add(historicActivityInstance.getActivityId())
+                    } else {
+
+                        // 添加高亮节点
+                        highLightedActivities.add(historicActivityInstance.getActivityId())
+                    }
+                })
+
+                String activityFontName = "宋体" // 节点字体
+                String labelFontName = "微软雅黑"// 连线标签字体
+                String annotationFontName = "宋体"// 连线标签字体
+                ClassLoader customClassLoader = null // 类加载器
+                double scaleFactor = 1.0d // 比例因子，默认即可
+                boolean drawSequenceFlowNameWithNoLabelDI = true // 不设置连线标签不会画
+
+                if(defaultProcessDiagramGenerator == null){ ec.logger.error("defaultProcessDiagramGenerator is null ")}
+                else(ec.logger.info("defaultProcessDiagramGenerator is : " + defaultProcessDiagramGenerator.toString()))
+
+
+                try {
+                    // 生成图片
+                    InputStream inputStream = defaultProcessDiagramGenerator.generateDiagram(bpmnModel, imageType, highLightedActivities
+                            , highLightedFlows, activityFontName, labelFontName, annotationFontName, customClassLoader,
+                            scaleFactor, drawSequenceFlowNameWithNoLabelDI) // 获取输入流
+                    
+                    // 先将图片保存
+                    ResourceReference resourceReference= ec.resource.getLocationReference("file:F:\\1.png")
+                    resourceReference.putStream(inputStream)
+//                    FileUtils.copyInputStreamToFile(inputStream, new File("F:\\", "1.png"))
+                }catch (Exception e)
+                {ec.logger.error(e.message) }
+
+//                // 直接写到页面，要先获取HttpServletResponse
+//                byte[] bytes = IoUtil.readInputStream(inputStream, "flow diagram inputStream");
+//                response.setContentType("image/png");
+//                ServletOutputStream outputStream = response.getOutputStream();
+//                response.reset();
+//                outputStream.write(bytes);
+//                outputStream.flush();
+//                outputStream.close();
+
+
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="delete" noun="ProcessInstance">
+        <in-parameters>
+            <parameter name="processInstanceId" required="true"/>
+            <parameter name="deleteReason"/>
+        </in-parameters>
+
+        <actions>
+            <script><![CDATA[
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.engine.ProcessEngine
+                import org.flowable.engine.RuntimeService
+
+
+                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                RuntimeService runtimeService = flowableEngine.getRuntimeService()
+                runtimeService.deleteProcessInstance(processInstanceId,deleteReason ?:'N/A')
+
+                ]]></script>
+        </actions>
+    </service>
+
+    <service verb="get" noun="AllRunningTaskList">
+        <out-parameters>
+            <parameter name="taskList" type="List">
+                <parameter name="task" type="Map">
+                    <parameter name="id"/>
+                    <parameter name="name"/>
+                    <parameter name="description"/>
+                    <parameter name="priority" type="integer"/>
+                    <parameter name="owner"/>
+                    <parameter name="assignee"/>
+                    <parameter name="processInstanceId"/>
+                    <parameter name="executionId"/>
+                    <parameter name="taskDefinitionId"/>
+                    <parameter name="processDefinitionId"/>
+                    <parameter name="scopeId"/>
+                    <parameter name="subScopeId"/>
+                    <parameter name="scopeType"/>
+                    <parameter name="scopeDefinitionId"/>
+                    <parameter name="propagatedStageInstanceId"/>
+                    <parameter name="createTime" type="Date"/>
+                    <parameter name="taskDefinitionKey"/>
+                    <parameter name="dueDate" type="Date"/>
+                    <parameter name="category"/>
+                    <parameter name="parentTaskId"/>
+                    <parameter name="tenantId"/>
+                    <parameter name="formKey"/>
+                    <parameter name="claimTime" type="Date"/>
+
+                </parameter>
+            </parameter>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.engine.TaskService
+                import org.flowable.task.api.Task
+                import org.flowable.task.api.TaskQuery
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.engine.ProcessEngine
+                import org.flowable.engine.RuntimeService
+
+                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                TaskService taskService = flowableEngine.getTaskService()
+
+                TaskQuery taskQuery = taskService.createTaskQuery()
+                        .taskWithoutTenantId()
+//                        .startedBefore(new Date())
+                List<Task> taskQueryList = taskQuery.list()
+                taskList = []
+
+                if (taskQueryList) {
+                    for (taskQueryItem in taskQueryList) {
+                        taskList.add([
+                                id                       : taskQueryItem.getId(),
+                                name                     : taskQueryItem.name,
+                                description              : taskQueryItem.description,
+                                priority                 : taskQueryItem.priority,
+                                owner                    : taskQueryItem.owner,
+                                assignee                 : taskQueryItem.assignee,
+                                processInstanceId        : taskQueryItem.processInstanceId,
+                                executionId              : taskQueryItem.executionId,
+                                taskDefinitionId         : taskQueryItem.taskDefinitionId,
+                                processDefinitionId      : taskQueryItem.processDefinitionId,
+                                scopeId                  : taskQueryItem.scopeId,
+                                subScopeId               : taskQueryItem.subScopeId,
+                                scopeType                : taskQueryItem.scopeType,
+                                scopeDefinitionId        : taskQueryItem.scopeDefinitionId,
+                                propagatedStageInstanceId: taskQueryItem.propagatedStageInstanceId,
+                                createTime               : taskQueryItem.createTime,
+                                taskDefinitionKey        : taskQueryItem.taskDefinitionKey,
+                                dueDate                  : taskQueryItem.dueDate,
+                                category                 : taskQueryItem.category,
+                                parentTaskId             : taskQueryItem.parentTaskId,
+                                tenantId                 : taskQueryItem.tenantId,
+                                formKey                  : taskQueryItem.formKey,
+                                claimTime                : taskQueryItem.claimTime
+
+
+                        ])
+                    }
+                }
+//                ec.logger.info("instanceList: " + processList.toString())
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="get" noun="TaskList">
+        <in-parameters>
+            <parameter name="assignee"/>
+            <parameter name="candidateUsername"/>
+            <parameter name="roleTypeIdList">
+                <parameter name="roleTypeId"/>
+            </parameter>
+            <parameter name="tenantId"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="taskList" type="List">
+                <parameter name="task" type="Map">
+                    <parameter name="id"/>
+                    <parameter name="name"/>
+                    <parameter name="description"/>
+                    <parameter name="priority" type="integer"/>
+                    <parameter name="owner"/>
+                    <parameter name="assignee"/>
+                    <parameter name="processInstanceId"/>
+                    <parameter name="executionId"/>
+                    <parameter name="taskDefinitionId"/>
+                    <parameter name="processDefinitionId"/>
+                    <parameter name="scopeId"/>
+                    <parameter name="subScopeId"/>
+                    <parameter name="scopeType"/>
+                    <parameter name="scopeDefinitionId"/>
+                    <parameter name="propagatedStageInstanceId"/>
+                    <parameter name="createTime" type="Date"/>
+                    <parameter name="taskDefinitionKey"/>
+                    <parameter name="dueDate" type="Date"/>
+                    <parameter name="category"/>
+                    <parameter name="parentTaskId"/>
+                    <parameter name="tenantId"/>
+                    <parameter name="formKey"/>
+                    <parameter name="claimTime" type="Date"/>
+
+                </parameter>
+            </parameter>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.engine.TaskService
+                import org.flowable.task.api.Task
+                import org.flowable.task.api.TaskQuery
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.engine.ProcessEngine
+                import org.flowable.engine.RuntimeService
+
+                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                TaskService taskService = flowableEngine.getTaskService()
+
+                TaskQuery taskQuery = taskService.createTaskQuery()
+                if(tenantId) {
+                    taskQuery.taskTenantId(tenantId)
+                }else{
+                    taskQuery.taskWithoutTenantId()
+                }
+                if(assignee){
+                    taskQuery.taskAssignee(assignee)
+                }
+                if(roleTypeIdList){
+                    for(roleTypeId in roleTypeIdList){
+                        taskQuery.taskCandidateGroup(roleTypeId)
+                    }
+                }
+                if(candidateUsername){
+                    taskQuery.taskCandidateUser(candidateUsername)
+                }
+
+                List<Task> taskQueryList = taskQuery.list()
+                taskList = []
+
+                if (taskQueryList) {
+                    for (taskQueryItem in taskQueryList) {
+                        taskList.add([
+                                id                       : taskQueryItem.getId(),
+                                name                     : taskQueryItem.name,
+                                description              : taskQueryItem.description,
+                                priority                 : taskQueryItem.priority,
+                                owner                    : taskQueryItem.owner,
+                                assignee                 : taskQueryItem.assignee,
+                                processInstanceId        : taskQueryItem.processInstanceId,
+                                executionId              : taskQueryItem.executionId,
+                                taskDefinitionId         : taskQueryItem.taskDefinitionId,
+                                processDefinitionId      : taskQueryItem.processDefinitionId,
+                                scopeId                  : taskQueryItem.scopeId,
+                                subScopeId               : taskQueryItem.subScopeId,
+                                scopeType                : taskQueryItem.scopeType,
+                                scopeDefinitionId        : taskQueryItem.scopeDefinitionId,
+                                propagatedStageInstanceId: taskQueryItem.propagatedStageInstanceId,
+                                createTime               : taskQueryItem.createTime,
+                                taskDefinitionKey        : taskQueryItem.taskDefinitionKey,
+                                dueDate                  : taskQueryItem.dueDate,
+                                category                 : taskQueryItem.category,
+                                parentTaskId             : taskQueryItem.parentTaskId,
+                                tenantId                 : taskQueryItem.tenantId,
+                                formKey                  : taskQueryItem.formKey,
+                                claimTime                : taskQueryItem.claimTime
+
+
+                        ])
+                    }
+                }
+//                ec.logger.info("instanceList: " + processList.toString())
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="complete" noun="RunningTask">
+        <in-parameters>
+            <parameter name="taskId" required="true"/>
+            <parameter name="variables" type="Map"/>
+        </in-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.engine.TaskService
+                import org.flowable.task.api.Task
+                import org.flowable.task.api.TaskQuery
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.engine.ProcessEngine
+                import org.flowable.engine.RuntimeService
+
+                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                TaskService taskService = flowableEngine.getTaskService()
+
+//                TaskQuery taskQuery = taskService.createTaskQuery()
+//                        .taskId(taskId)
+//                Task curTask = taskQuery.singleResult()
+                ec.logger.info("variables: " + variables.toString())
+
+                if(variables){
+                    taskService.complete(taskId,variables)
+                }else{
+                    taskService.complete(taskId)
+                }
+//                ec.logger.info("instanceList: " + processList.toString())
+                ]]></script>
+        </actions>
+    </service>
+
+
+</services>

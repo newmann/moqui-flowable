@@ -1,0 +1,24 @@
+{
+    "key": "callMoquiServiceEvent",
+    "name": "Call Moqui service event",
+    "correlationParameters": [
+        {
+            "name": "businessKey",
+            "type": "string"
+        }
+    ],
+    "payload": [
+        {
+            "name": "businessKey",
+            "type": "string"
+        },
+        {
+            "name": "serviceName",
+            "type": "string"
+        },
+        {
+            "name": "jsonParameters",
+            "type": "string"
+        }
+    ]
+}

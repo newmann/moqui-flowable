@@ -1,0 +1,598 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+    <service verb="release" noun="BPMN">
+        <in-parameters>
+            <parameter name="resourceName" required="true"/>
+            <parameter name="workflowName" required="true"/>
+            <parameter name="workflowCategory" required="true"/>
+        </in-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.flowable.FlowableToolFactory
+                flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                repositoryService = flowableEngine.getRepositoryService()
+                resource = ec.resource.getLocationReference(resourceName)
+
+                repositoryService.createDeployment()
+                    .addInputStream(resource.getLocation(),resource.openStream())
+                    .name(workflowName)
+                    .category(workflowCategory)
+                    .key(resourceName)
+                    .deploy()
+                // 验证部署
+                long count = repositoryService.createDeploymentQuery().deploymentName(workflowName).count();
+                if(count <= 0){
+                    ec.message.addError("没有正常发布成功，请检查原因。")
+                }
+                ]]></script>
+        </actions>
+    </service>
+
+    <service verb="get" noun="BPMNProcessReleaseList">
+        <description>查询BPMN文件里面定义的process发布情况</description>
+        <in-parameters>
+            <parameter name="resourceName" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="processReleaseList" type="Map"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.bpmn.model.Process
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.bpmn.converter.BpmnXMLConverter
+                import org.flowable.bpmn.model.BpmnModel
+                import org.flowable.engine.RepositoryService
+                import org.flowable.engine.ProcessEngine
+                import org.moqui.resource.ResourceReference
+
+                import javax.xml.stream.XMLInputFactory
+                import javax.xml.stream.XMLStreamReader
+
+                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                RepositoryService repositoryService = flowableEngine.getRepositoryService()
+
+                ResourceReference resource = ec.resource.getLocationReference(resourceName)
+
+                BpmnXMLConverter bpmnXMLConverter = new BpmnXMLConverter()
+                XMLStreamReader xmlStreamReader = XMLInputFactory.newFactory().createXMLStreamReader(resource.openStream())
+                BpmnModel bpmnModel = bpmnXMLConverter.convertToBpmnModel(xmlStreamReader)
+
+                List<Process> processList = bpmnModel.processes
+
+                processReleaseList = []
+                for (process in processList) {
+                    //xml文件中的process id,对应到数据库中的key
+                    processQuery = repositoryService.createProcessDefinitionQuery().processDefinitionKey(process.id).latestVersion().singleResult()
+
+//                    ec.logger.info("id:" + processQuery.id)
+//                    ec.logger.info("name:" + processQuery.name)
+//                    ec.logger.info("key:" + processQuery.key)
+
+                    if (processQuery) {
+                        processReleaseList.add([name                : process.name,
+                                                processId: processQuery.id,
+                                                processKey          : processQuery.key,
+                                                processLatestVersion: processQuery.getVersion()])
+                    } else {
+                        processReleaseList.add([processId           : process.Id,
+                                                name: process.name,
+                                                processKey          : null,
+                                                processLatestVersion: null])
+                    }
+
+                }
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="get" noun="AllProcessDefineList">
+        <description>查询所有发布的process情况</description>
+        <out-parameters>
+            <parameter name="processDefineList" type="Map"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.bpmn.model.Process
+                import org.flowable.engine.impl.persistence.entity.ProcessDefinitionEntity
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.bpmn.converter.BpmnXMLConverter
+                import org.flowable.bpmn.model.BpmnModel
+                import org.flowable.engine.RepositoryService
+                import org.flowable.engine.ProcessEngine
+                import org.moqui.resource.ResourceReference
+                import org.flowable.engine.repository.ProcessDefinition
+
+                ProcessEngine flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                RepositoryService repositoryService = flowableEngine.getRepositoryService()
+
+                List<ProcessDefinitionEntity> processDefinitionEntityList = repositoryService.createProcessDefinitionQuery()
+//                        .processDefinitionKeyLike("*")
+                        .latestVersion()
+                        .list()
+//                ec.logger.info("processDefinitionList : " + processDefinitionList.toString())
+
+                processDefineList = []
+                for (processDefineEntity in processDefinitionEntityList) {
+                    processDefineList.add([
+                            name                : processDefineEntity.name,
+                            id: processDefineEntity.id,
+                            key          : processDefineEntity.key,
+                            version: processDefineEntity.getVersion(),
+                            deploymentId: processDefineEntity.getDeploymentId(),
+                            description: processDefineEntity.getDescription(),
+                            resourceName: processDefineEntity.getResourceName(),
+                            hasStartFormKey: processDefineEntity.hasStartFormKey,
+                            suspended: processDefineEntity.isSuspended(),
+                            tenantId: processDefineEntity.getTenantId(),
+                            derivedFrom: processDefineEntity.derivedFrom,
+                            derivedFromRoot: processDefineEntity.derivedFromRoot,
+                            derivedVersion: processDefineEntity.getDerivedVersion(),
+                            engineVersion: processDefineEntity.getEngineVersion()
+                    ])
+
+                }
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="get" noun="BPMNReleaseHistoryList">
+        <description>查询BPMN文件发布的历史明细</description>
+        <in-parameters>
+            <parameter name="resourceName" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="releaseHistoryList" type="List">
+                <parameter name="deployment" type="Map">
+                    <parameter name="deploymentId"/>
+                    <parameter name="name"/>
+                    <parameter name="category"/>
+                    <parameter name="key" />
+                    <parameter name="tenantId" />
+                    <parameter name="deploymentTime" type="Date"/>
+                    <parameter name="derivedFrom"/>
+                    <parameter name="derivedFromRoot"/>
+                    <parameter name="parentDeploymentId"/>
+                    <parameter name="engineVersion"/>
+                </parameter>
+            </parameter>
+
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.flowable.FlowableToolFactory
+                flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                repositoryService = flowableEngine.getRepositoryService()
+
+
+                deploymentList = repositoryService.createDeploymentQuery().deploymentKey(resourceName).list()
+
+                releaseHistoryList = []
+                for(deployment in deploymentList){
+                    releaseHistoryList.add([deploymentId:deployment.id,
+                                            name: deployment.name,
+                                            category: deployment.category,
+                                            key: deployment.key,
+                                            tenantId: deployment.tenantId,
+                                            deploymentTime: deployment.deploymentTime,
+                                            derivedFrom: deployment.derivedFrom,
+                                            derivedFromRoot: deployment.derivedFromRoot,
+                                            parentDeploymentId: deployment.parentDeploymentId,
+                                            engineVersion:deployment.engineVersion])
+                }
+
+
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="get" noun="AllReleaseHistoryList">
+        <description>查询所有BPMN文件发布的历史明细</description>
+        <out-parameters>
+            <parameter name="releaseHistoryList" type="List">
+                <parameter name="deployment" type="Map">
+                    <parameter name="deploymentId"/>
+                    <parameter name="name"/>
+                    <parameter name="category"/>
+                    <parameter name="key" />
+                    <parameter name="tenantId" />
+                    <parameter name="deploymentTime" type="Date"/>
+                    <parameter name="derivedFrom"/>
+                    <parameter name="derivedFromRoot"/>
+                    <parameter name="parentDeploymentId"/>
+                    <parameter name="engineVersion"/>
+                </parameter>
+            </parameter>
+
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.flowable.FlowableToolFactory
+                flowableEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).getInstance().getProcessEngine()
+                repositoryService = flowableEngine.getRepositoryService()
+
+
+                deploymentList = repositoryService.createDeploymentQuery().list()
+
+                releaseHistoryList = []
+                for(deployment in deploymentList){
+                    releaseHistoryList.add([deploymentId:deployment.id,
+                                            name: deployment.name,
+                                            category: deployment.category,
+                                            key: deployment.key,
+                                            tenantId: deployment.tenantId,
+                                            deploymentTime: deployment.deploymentTime,
+                                            derivedFrom: deployment.derivedFrom,
+                                            derivedFromRoot: deployment.derivedFromRoot,
+                                            parentDeploymentId: deployment.parentDeploymentId,
+                                            engineVersion:deployment.engineVersion])
+                }
+
+
+                ]]></script>
+        </actions>
+    </service>
+
+    <service verb="delete" noun="BPMNReleaseHistory">
+        <description>删除BPMN文件发布的历史明细</description>
+        <in-parameters>
+            <parameter name="deploymentId" required="true"/>
+        </in-parameters>
+        <actions>
+            <script><![CDATA[
+                flowableEngine = ec.factory.getToolFactory("FLOWABLE").getInstance().getProcessEngine()
+                repositoryService = flowableEngine.getRepositoryService()
+                repositoryService.deleteDeploymentCascade(deploymentId)
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="release" noun="EventAndChannel">
+        <in-parameters>
+            <parameter name="resourceName" required="true"/>
+            <parameter name="eventAndChannelCategory" required="true"/>
+        </in-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.eventregistry.impl.EventRegistryEngine
+                import org.flowable.eventregistry.api.EventRepositoryService
+
+            EventRegistryEngine eventRegistryEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).eventRegistryEngine
+            EventRepositoryService eventRepositoryService = eventRegistryEngine.getEventRepositoryService()
+
+            resource = ec.resource.getLocationReference(resourceName)
+
+            eventRepositoryService.createDeployment()
+                    .addInputStream(resource.getLocation(), resource.openStream())
+                    .name(resourceName)
+                    .category(eventAndChannelCategory)
+                    .deploy()
+
+            // 验证部署
+            long count = eventRepositoryService.createDeploymentQuery().deploymentName(resourceName).count()
+            if (count <= 0) {
+                ec.message.addError("没有正常发布成功，请检查原因。")
+            }
+                ]]></script>
+        </actions>
+    </service>
+
+    <service verb="get" noun="AllReleaseEventAndChannelList">
+        <description>查询所有Event和Channel发布的历史明细</description>
+        <out-parameters>
+            <parameter name="releaseHistoryList" type="List">
+                <parameter name="deployment" type="Map">
+                    <parameter name="deploymentId"/>
+                    <parameter name="name"/>
+                    <parameter name="category"/>
+                    <parameter name="tenantId" />
+                    <parameter name="deploymentTime" type="Date"/>
+                    <parameter name="parentDeploymentId"/>
+                </parameter>
+            </parameter>
+
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+
+                import org.flowable.eventregistry.api.EventDeploymentQuery
+                import org.flowable.eventregistry.impl.persistence.entity.EventDeploymentEntity
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.eventregistry.impl.EventRegistryEngine
+                import org.flowable.eventregistry.api.EventRepositoryService
+
+                EventRegistryEngine eventRegistryEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).eventRegistryEngine
+                EventRepositoryService eventRepositoryService = eventRegistryEngine.getEventRepositoryService()
+
+                List<EventDeploymentEntity> deploymentList = eventRepositoryService.createDeploymentQuery().list()
+
+                releaseHistoryList = []
+//                ec.logger.info("deploymentList : " + deploymentList.toString())
+
+                for (deployment in deploymentList) {
+                    releaseHistoryList.add([deploymentId      : deployment.id,
+                                            name              : deployment.name,
+                                            category          : deployment.category,
+                                            tenantId          : deployment.tenantId,
+                                            deploymentTime    : deployment.deploymentTime,
+                                            parentDeploymentId: deployment.parentDeploymentId
+                    ])
+                }
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="get" noun="EventAndChannelReleaseHistoryList">
+        <description>查询Event 和 Channel文件发布的历史明细</description>
+        <in-parameters>
+            <parameter name="resourceName" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="releaseHistoryList" type="List">
+                <parameter name="deployment" type="Map">
+                    <parameter name="deploymentId"/>
+                    <parameter name="name"/>
+                    <parameter name="category"/>
+                    <parameter name="tenantId" />
+                    <parameter name="deploymentTime" type="Date"/>
+                    <parameter name="parentDeploymentId"/>
+                </parameter>
+            </parameter>
+
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.eventregistry.impl.EventRegistryEngine
+                import org.flowable.eventregistry.api.EventRepositoryService
+                import org.flowable.eventregistry.api.EventDeployment
+
+                EventRegistryEngine eventRegistryEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).eventRegistryEngine
+                EventRepositoryService eventRepositoryService = eventRegistryEngine.getEventRepositoryService()
+
+
+                List<EventDeployment> deploymentList = eventRepositoryService.createDeploymentQuery().deploymentName(resourceName).list()
+
+                releaseHistoryList = []
+                for(deployment in deploymentList){
+                    releaseHistoryList.add([deploymentId:deployment.id,
+                                            name: deployment.name,
+                                            category: deployment.category,
+                                            tenantId: deployment.tenantId,
+                                            deploymentTime: deployment.deploymentTime,
+                                            parentDeploymentId: deployment.parentDeploymentId
+                    ])
+                }
+
+
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="get" noun="AllEventDefineList">
+        <description>查询所有发布的Event明细</description>
+        <out-parameters>
+            <parameter name="eventDefineList" type="List">
+                <parameter name="eventDefine" type="Map">
+                    <parameter name="id"/>
+                    <parameter name="name"/>
+                    <parameter name="category"/>
+                    <parameter name="key"/>
+                    <parameter name="version"/>
+                    <parameter name="description"/>
+                    <parameter name="resourceName" />
+                    <parameter name="deploymentId" />
+                    <parameter name="tenantId"/>
+                </parameter>
+            </parameter>
+
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.eventregistry.api.EventDeploymentQuery
+                import org.flowable.eventregistry.impl.persistence.entity.EventDefinitionEntity
+                import org.flowable.eventregistry.impl.persistence.entity.EventDeploymentEntity
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.eventregistry.impl.EventRegistryEngine
+                import org.flowable.eventregistry.api.EventRepositoryService
+
+                EventRegistryEngine eventRegistryEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).eventRegistryEngine
+                EventRepositoryService eventRepositoryService = eventRegistryEngine.getEventRepositoryService()
+
+                List<EventDefinitionEntity> definitionEntityList = eventRepositoryService.createEventDefinitionQuery().list()
+
+
+                eventDefineList = []
+//                ec.logger.info("definitionEntityList : " + definitionEntityList.toString())
+
+                for (definitionEntity in definitionEntityList) {
+                    eventDefineList.add([
+                            id      : definitionEntity.id,
+                                            name              : definitionEntity.name,
+                                            category          : definitionEntity.category,
+                            key: definitionEntity.key,
+                            version: definitionEntity.version,
+                            description: definitionEntity.description,
+                            resourceName: definitionEntity.resourceName,
+                            deploymentId: definitionEntity.deploymentId,
+                            tenantId          : definitionEntity.tenantId
+                    ])
+                }
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="get" noun="AllChannelDefineList">
+        <description>查询所有发布的Event明细</description>
+        <out-parameters>
+            <parameter name="channelDefineList" type="List">
+                <parameter name="channelDefine" type="Map">
+                    <parameter name="id"/>
+                    <parameter name="name"/>
+                    <parameter name="category"/>
+                    <parameter name="key"/>
+                    <parameter name="version"/>
+                    <parameter name="description"/>
+                    <parameter name="type"/>
+                    <parameter name="implementation"/>
+                    <parameter name="resourceName" />
+                    <parameter name="deploymentId" />
+                    <parameter name="createTime" type="Date"/>
+                    <parameter name="tenantId"/>
+                </parameter>
+            </parameter>
+
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.eventregistry.api.EventDeploymentQuery
+                import org.flowable.eventregistry.impl.persistence.entity.ChannelDefinitionEntity
+                import org.flowable.eventregistry.impl.persistence.entity.EventDefinitionEntity
+                import org.flowable.eventregistry.impl.persistence.entity.EventDeploymentEntity
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.eventregistry.impl.EventRegistryEngine
+                import org.flowable.eventregistry.api.EventRepositoryService
+
+                EventRegistryEngine eventRegistryEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).eventRegistryEngine
+                EventRepositoryService eventRepositoryService = eventRegistryEngine.getEventRepositoryService()
+
+
+                List<ChannelDefinitionEntity> definitionEntityList = eventRepositoryService.createChannelDefinitionQuery().list()
+
+
+                channelDefineList = []
+//                ec.logger.info("definitionEntityList : " + definitionEntityList.toString())
+
+                for (definitionEntity in definitionEntityList) {
+                    channelDefineList.add([
+                            id          : definitionEntity.id,
+                            name        : definitionEntity.name,
+                            category    : definitionEntity.category,
+                            key         : definitionEntity.key,
+                            version     : definitionEntity.version,
+                            description : definitionEntity.description,
+                            type: definitionEntity.type,
+                            implementation: definitionEntity.implementation,
+                            resourceName: definitionEntity.resourceName,
+                            deploymentId: definitionEntity.deploymentId,
+                            createTime: definitionEntity.createTime,
+                            tenantId    : definitionEntity.tenantId
+                    ])
+                }
+                ]]></script>
+        </actions>
+    </service>
+
+    <service verb="delete" noun="EventAndChannelReleaseHistory">
+        <description>删除Event和Channel文件发布的历史明细</description>
+        <in-parameters>
+            <parameter name="deploymentId" required="true"/>
+        </in-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.flowable.FlowableToolFactory
+                import org.flowable.eventregistry.impl.EventRegistryEngine
+                import org.flowable.eventregistry.api.EventRepositoryService
+
+                EventRegistryEngine eventRegistryEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).eventRegistryEngine
+                EventRepositoryService eventRepositoryService = eventRegistryEngine.getEventRepositoryService()
+
+                eventRepositoryService.deleteDeployment(deploymentId)
+                ]]></script>
+        </actions>
+    </service>
+    <service verb="get" noun="AllAppList">
+        <description>查询所有最新版本的App明细</description>
+        <in-parameters>
+            <parameter name="onlyLatestVersion" type="Boolean" default-value="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="appList" type="List">
+                <parameter name="appDefine" type="Map">
+                    <parameter name="id"/>
+                    <parameter name="name"/>
+                    <parameter name="category"/>
+                    <parameter name="key"/>
+                    <parameter name="version"/>
+                    <parameter name="description"/>
+                    <parameter name="resourceName" />
+                    <parameter name="deploymentId"/>
+                    <parameter name="deploymentTime" type="Date" />
+                    <parameter name="tenantId"/>
+                </parameter>
+            </parameter>
+
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.app.api.AppRepositoryService
+                import org.flowable.app.api.repository.AppDefinition
+                import org.flowable.app.api.repository.AppDefinitionQuery
+                import org.flowable.app.api.repository.AppDeployment
+                import org.flowable.app.engine.AppEngine
+                import org.moqui.flowable.FlowableToolFactory
+
+                AppEngine appEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).appEngine
+                AppRepositoryService repositoryService = appEngine.getAppRepositoryService()
+
+                List<AppDefinition> definitionList
+                if(onlyLatestVersion){
+                    definitionList = repositoryService.createAppDefinitionQuery()
+                            .latestVersion()
+                            .list()
+
+                }else{
+                    definitionList = repositoryService.createAppDefinitionQuery()
+                            .list()
+                }
+
+                appList = []
+
+                for (definitionEntity in definitionList) {
+                    AppDeployment deployment = repositoryService.createDeploymentQuery()
+                        .deploymentId(definitionEntity.getDeploymentId())
+                        .singleResult()
+                    appList.add([
+                            id          : definitionEntity.id,
+                            name        : definitionEntity.name,
+                            category    : definitionEntity.category,
+                            key         : definitionEntity.key,
+                            version     : definitionEntity.version,
+                            description : definitionEntity.description,
+                            resourceName: definitionEntity.resourceName,
+                            deploymentId: definitionEntity.deploymentId,
+                            deploymentTime: deployment.deploymentTime,
+                            tenantId    : definitionEntity.tenantId
+                    ])
+                }
+                ]]></script>
+        </actions>
+    </service>
+
+    <service verb="delete" noun="App">
+        <description>删除App</description>
+        <in-parameters>
+            <parameter name="deploymentId" required="true"/>
+        </in-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.flowable.app.api.AppRepositoryService
+                import org.flowable.app.engine.AppEngine
+                import org.moqui.flowable.FlowableToolFactory
+
+                AppEngine appEngine = ec.factory.getToolFactory(FlowableToolFactory.TOOL_NAME).appEngine
+                AppRepositoryService repositoryService = appEngine.getAppRepositoryService()
+
+                repositoryService.deleteDeployment(deploymentId,true)
+
+                ]]></script>
+        </actions>
+    </service>
+</services>

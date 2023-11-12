@@ -1,0 +1,12 @@
+{
+    "key": "testChannel",
+    "name": "Test channel",
+    "description": "test Inbound Channel",
+    "channelType": "inbound",
+    "type": "rabbit",
+    "deserializerType": "json",
+    "channelEventKeyDetection": {
+        "fixedValue": "testEvent"
+    },
+    "queues": ["FlowableQueue"]
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:flowable="http://flowable.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xmlns:design="http://flowable.org/design" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://flowable.org/test" design:palette="flowable-process-palette">
+    <process id="testProcess" name="TestProcess" isExecutable="true" flowable:candidateStarterGroups="flowableUser">
+        <extensionElements>
+            <design:stencilid><![CDATA[BPMNDiagram]]></design:stencilid>
+            <design:language><![CDATA[English]]></design:language>
+            <design:creationdate><![CDATA[2020-10-21T18:06:24.584Z]]></design:creationdate>
+            <design:modificationdate><![CDATA[2020-10-21T18:09:31.900Z]]></design:modificationdate>
+        </extensionElements>
+        <startEvent id="startEventRegistryEvent1" flowable:initiator="initiator">
+            <extensionElements>
+                <flowable:eventType><![CDATA[testEvent]]></flowable:eventType>
+                <flowable:startEventCorrelationConfiguration><![CDATA[startNewInstance]]></flowable:startEventCorrelationConfiguration>
+                <flowable:eventOutParameter source="CustomerId" target="customerId"></flowable:eventOutParameter>
+                <flowable:eventOutParameter source="ProductId" target="productId"></flowable:eventOutParameter>
+                <flowable:channelKey><![CDATA[testChannel]]></flowable:channelKey>
+                <design:stencilid><![CDATA[StartEventRegistryEvent]]></design:stencilid>
+            </extensionElements>
+        </startEvent>
+        <userTask id="formTask1" name="User task" flowable:assignee="${initiator}" flowable:formFieldValidation="false">
+            <extensionElements>
+                <flowable:task-candidates-type><![CDATA[all]]></flowable:task-candidates-type>
+                <flowable:exposeAsMessage>
+                    <flowable:conversationId><![CDATA[Conversation1]]></flowable:conversationId>
+                    <flowable:sendingUserId><![CDATA[admin]]></flowable:sendingUserId>
+                    <flowable:messageContent><![CDATA[Hello.]]></flowable:messageContent>
+                    <flowable:isStickMessage><![CDATA[false]]></flowable:isStickMessage>
+                </flowable:exposeAsMessage>
+                <design:stencilid><![CDATA[FormTask]]></design:stencilid>
+                <design:stencilsuperid><![CDATA[Task]]></design:stencilsuperid>
+            </extensionElements>
+        </userTask>
+        <endEvent id="endNoneEvent1">
+            <extensionElements>
+                <design:stencilid><![CDATA[EndNoneEvent]]></design:stencilid>
+            </extensionElements>
+        </endEvent>
+        <sequenceFlow id="sequenceFlow1" sourceRef="startEventRegistryEvent1" targetRef="formTask1">
+            <extensionElements>
+                <design:stencilid><![CDATA[SequenceFlow]]></design:stencilid>
+            </extensionElements>
+        </sequenceFlow>
+        <sequenceFlow id="sequenceFlow2" sourceRef="formTask1" targetRef="endNoneEvent1">
+            <extensionElements>
+                <design:stencilid><![CDATA[SequenceFlow]]></design:stencilid>
+            </extensionElements>
+        </sequenceFlow>
+    </process>
+</definitions>

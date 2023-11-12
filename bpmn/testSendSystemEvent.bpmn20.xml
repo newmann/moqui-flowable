@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions id="definitions"
+             xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             targetNamespace="Examples"
+             xmlns:tns="Examples">
+
+    <process id="sendEventProcess">
+
+        <startEvent id="theStart" name="Start Event"/>
+
+        <sequenceFlow sourceRef="theStart" targetRef="task"/>
+
+        <serviceTask id="task" flowable:type="send-event" name="Send event Task">
+            <extensionElements>
+                <flowable:eventType>moquiServiceEvent</flowable:eventType>
+                <flowable:eventInParameter source="${serviceName}" target="serviceName" />
+                <flowable:eventInParameter source="${parameter}" target="parameter" />
+                <flowable:channelKey>callingMoquiServiceChannel</flowable:channelKey>
+            </extensionElements>
+        </serviceTask>
+
+        <sequenceFlow sourceRef="task" targetRef="theEnd"/>
+
+        <endEvent id="theEnd" name="End Event"/>
+
+    </process>
+
+</definitions>

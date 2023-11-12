@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        include-child-content="true" require-authentication="true" menu-image="fa fa-flash" menu-image-type="icon">
+
+    <always-actions>
+        <set field="appRoot" value="MoquiFlowable"/>
+<!--        <set field="appUserGroupTypeEnumId" value="UgtITSM"/>-->
+       <set field="searchIndexName" value="mantle"/>
+        <set field="searchLinkSets" value="marble"/>
+        <set field="searchProductDocType" value="MantleProduct"/>
+        <set field="searchPartyDocType" value="MantleParty"/>
+
+        <!--
+
+                <service-call name="mantle.party.PartyServices.setup#UserOrganizationInfo" out-map="context"/>-->
+
+    </always-actions>
+
+    <subscreens default-item="dashboard" always-use-full-path="true">
+        <subscreens-item name="Publish" location="component://moqui-flowable/screen/Publish.xml" menu-index="2"/>
+        <subscreens-item name="RunProcess" location="component://moqui-flowable/screen/RunProcess.xml" menu-index="3"/>
+        <subscreens-item name="Management" location="component://moqui-flowable/screen/Management.xml" menu-index="4"/>
+<!--        <subscreens-item name="Service" location="component://beiyelin-devtools/screen/Service.xml" menu-index="3"/>-->
+<!--        <subscreens-item name="AutoScreen" location="component://beiyelin-devtools/screen/AutoScreen.xml" menu-index="4"/>-->
+<!--        <subscreens-item name="ScreenCapture" location="component://beiyelin-devtools/screen/ScreenCapture.xml" menu-index="10"/>-->
+<!--        <subscreens-item name="Draw" location="component://beiyelin-devtools/screen/Draw.xml" menu-index="11"/>-->
+    </subscreens>
+
+
+    <widgets>
+        <subscreens-panel id="workflow" type="popup" title="Work Flow Management"/>
+    </widgets>
+</screen>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+    <service verb="get" noun="UserWorkflowList">
+        <in-parameters>
+            <parameter name="username" required="true" default-value="ec.user.username"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="workflowList" type="List">
+                <parameter name="workflow" type="Map">
+                    <auto-parameters entity-name="mantle.workflow.EntityToWorkflow"></auto-parameters>
+                </parameter>
+            </parameter>
+        </out-parameters>
+        <actions>
+<!--            todo need to update -->
+            <entity-find entity-name="mantle.workflow.EntityToWorkflow" list="workflowList"/>
+
+        </actions>
+    </service>
+
+    <service verb="create" noun="ProcessInstanceByEntity">
+        <in-parameters>
+            <parameter name="entityToWorkflowId" required="true"/>
+            <parameter name="masterEntityId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="processInstanceId" />
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="mantle.workflow.EntityToWorkflow" value-field="entityToWorkflow"/>
+            <set field="businessKey" value="${entityToWorkflow.entityName}:${masterEntityId}"/>
+            <service-call name="moqui.flowable.RuntimeServices.run#ProcessByKey" in-map="[processKey:entityToWorkflow.processKey,businessKey: businessKey]"
+                          out-map="context"/>
+
+        </actions>
+    </service>
+    <service verb="get" noun="UserTaskList">
+        <in-parameters>
+            <parameter name="username" required="true" default="ec.user.username"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="taskList" type="List">
+                <parameter name="task" type="Map">
+                    <parameter name="id"/>
+                    <parameter name="name"/>
+                    <parameter name="description"/>
+                    <parameter name="priority" type="integer"/>
+                    <parameter name="owner"/>
+                    <parameter name="assignee"/>
+                    <parameter name="processInstanceId"/>
+                    <parameter name="executionId"/>
+                    <parameter name="taskDefinitionId"/>
+                    <parameter name="processDefinitionId"/>
+                    <parameter name="scopeId"/>
+                    <parameter name="subScopeId"/>
+                    <parameter name="scopeType"/>
+                    <parameter name="scopeDefinitionId"/>
+                    <parameter name="propagatedStageInstanceId"/>
+                    <parameter name="createTime" type="Date"/>
+                    <parameter name="taskDefinitionKey"/>
+                    <parameter name="dueDate" type="Date"/>
+                    <parameter name="category"/>
+                    <parameter name="parentTaskId"/>
+                    <parameter name="tenantId"/>
+                    <parameter name="formKey"/>
+                    <parameter name="claimTime" type="Date"/>
+                </parameter>
+            </parameter>
+        </out-parameters>
+        <actions>
+            <service-call name="org.moqui.flowable.RuntimeServices.get#TaskList" in-map="[assignee:username]" out-map="context"/>
+
+        </actions>
+    </service>
+</services>

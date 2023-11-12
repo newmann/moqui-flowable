@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="All E&amp;C Deployment Browse" default-menu-index="5" >
+
+
+    <transition name="deleteReleaseHistory">
+        <service-call name="org.moqui.flowable.RepositoryServices.delete#EventAndChannelReleaseHistory" in-map="context" out-map="context"/>
+        <default-response url="."/>
+    </transition>
+
+
+
+    <actions>
+
+<!--        <message type="info">resourceName: ${resourceName}</message>-->
+
+        <service-call name="org.moqui.flowable.RepositoryServices.get#AllReleaseEventAndChannelList" in-map="context" out-map="context"/>
+
+    </actions>
+    <widgets>
+        <label text="Deployment Management" type="h3" />
+        <form-list name="ReleaseHistoryList" list="releaseHistoryList">
+            <field name="deploymentId">
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="name">
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+
+            <field name="category">
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+
+            <field name="deploymentTime">
+                <default-field><display also-hidden="false" format="yyyy.MM.dd hh:ss"/></default-field>
+            </field>
+
+            <field name="tenantId">
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="parentDeploymentId">
+                <default-field><display also-hidden="false"/></default-field>
+            </field>
+            <field name="delete">
+                <header-field title="Actions" >
+                </header-field>
+                <default-field>
+                <link url="deleteReleaseHistory" text="Delete" parameter-map="[deploymentId:deploymentId]"/>
+            </default-field></field>
+        </form-list>
+    </widgets>
+</screen>

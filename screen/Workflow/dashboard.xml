@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Dashboard" default-menu-index="1" menu-image="fa fa-dashboard" menu-image-type="icon">
+
+
+    <widgets>
+
+        <container-row>
+            <row-col sm="1">
+                <label text="&amp;nbsp;" encode="false"/>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Publish" link-type="anchor">
+                        <image url="/b/images/entity-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="Publish" url="//${appRoot}/Publish" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Publish/BPMNBrowse" link-type="anchor">
+                        <image url="/b/images/entity-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="BPMN Browse" url="//${appRoot}/Publish/BPMNBrowse" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Publish/AllBPMNDeploymentBrowse" link-type="anchor">
+                        <image url="/b/images/entity-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="All Deployed BPMN " url="//${appRoot}/Publish/AllBPMNDeploymentBrowse" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Publish/EventAndChannelBrowse" link-type="anchor">
+                        <image url="/b/images/entity-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="Event and Channel" url="//${appRoot}/Publish/EventAndChannelBrowse" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Publish/AllEventAndChannelDeploymentBrowse" link-type="anchor">
+                        <image url="/b/images/entity-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="All Deployed E&amp;C" url="//${appRoot}/Publish/AllEventAndChannelDeploymentBrowse" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+
+
+            <row-col sm="1">
+                <label text="&amp;nbsp;" encode="false"/>
+            </row-col>
+        </container-row>
+        <container>
+            <label text="&amp;nbsp;" encode="false"/>
+        </container>
+        <container-row>
+            <row-col sm="1">
+                <label text="&amp;nbsp;" encode="false"/>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/RunProcess" link-type="anchor">
+                        <image url="/b/images/service-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="Run Process" url="//${appRoot}/RunProcess" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Service/ServiceReference" link-type="anchor">
+                        <image url="/b/images/service-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="Service Reference" url="//${appRoot}/Service/ServiceReference" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Service/ServiceViewer" link-type="anchor">
+                        <image url="/b/images/service-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="Service Viewer" url="//${appRoot}/Service/ServiceViewer" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Service/ServiceRun" link-type="anchor">
+                        <image url="/b/images/service-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="Service Run" url="//${appRoot}/Service/ServiceRun" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+            <row-col sm="1">
+                <label text="&amp;nbsp;" encode="false"/>
+            </row-col>
+        </container-row>
+        <container>
+            <label text="&amp;nbsp;" encode="false"/>
+        </container>
+        <container-row>
+            <row-col sm="1">
+                <label text="&amp;nbsp;" encode="false"/>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/AutoScreen" link-type="anchor">
+                        <image url="/b/images/screen-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="Auto Screen" url="//${appRoot}/AutoScreen" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+            <row-col sm="1">
+                <label text="&amp;nbsp;" encode="false"/>
+            </row-col>
+        </container-row>
+        <container>
+            <label text="&amp;nbsp;" encode="false"/>
+        </container>
+        <container-row>
+            <row-col sm="1">
+                <label text="&amp;nbsp;" encode="false"/>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container >
+                    <link url="//${appRoot}/ScreenCapture" link-type="anchor">
+                        <image url="/b/images/capture-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="Screen Capture" url="//${appRoot}/ScreenCapture" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+
+            <row-col sm="1">
+                <label text="&amp;nbsp;" encode="false"/>
+            </row-col>
+        </container-row>
+        <container>
+            <label text="&amp;nbsp;" encode="false"/>
+        </container>
+        <container-row>
+            <row-col sm="1">
+                <label text="&amp;nbsp;" encode="false"/>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Draw/ErDiagram" link-type="anchor">
+                        <image url="/b/images/capture-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="ER Diagram" url="//${appRoot}/Draw/ErDiagram" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Draw/FlowDiagram" link-type="anchor">
+                        <image url="/b/images/capture-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="Flow Diagram" url="//${appRoot}/Draw/FlowDiagram" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+
+            <row-col sm="2" style="text-center">
+                <container>
+                    <link url="//${appRoot}/Draw/Bpmn" link-type="anchor">
+                        <image url="/b/images/capture-1.png" url-type="screen" style="invertible"
+                               width="40"/>
+                    </link>
+                    <container>
+                        <link text="BPMN" url="//${appRoot}/Draw/Bpmn" link-type="anchor"/>
+                    </container>
+                </container>
+            </row-col>
+
+            <row-col sm="1">
+                <label text="&amp;nbsp;" encode="false"/>
+            </row-col>
+        </container-row>
+    </widgets>
+</screen>

@@ -1,0 +1,11 @@
+{
+    "key": "flowableToMoquiChannel",
+    "category": "moqui",
+    "name": "Flowable to Moqui channel",
+    "description": "Call moqui service by this channel",
+    "channelType": "outbound",
+    "type": "rabbit",
+    "exchange": "flowable.moqui",
+    "routingKey": "flowable.to.moqui",
+    "serializerType": "json"
+}

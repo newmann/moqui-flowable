@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="RunProcess" default-menu-index="2">
+
+    <transition name="runProcess">
+        <service-call name="org.moqui.flowable.RuntimeServices.run#ProcessByKey" in-map="context" out-map="context"/>
+        <default-response url="."></default-response>
+    </transition>
+    <transition name="runProcessByEvent">
+        <service-call name="org.moqui.flowable.RuntimeServices.run#ProcessByEvent" in-map="context" out-map="context"/>
+        <default-response url="."></default-response>
+    </transition>
+
+    <actions>
+        <script>import groovy.json.JsonOutput
+
+        processList = []
+        processList.add([processKey: 'GatherData', jsonForProcessVariables: '{"serviceName":"test"}'])
+        processList.add([processKey: 'receiveEventTest'])
+        processList.add([processKey: 'testProcess'])
+        processList.add([processKey: 'receiveRabbitEvent'])
+
+        eventList = []
+        payload = [id: "randomId"]
+
+        eventList.add([eventName: 'Start process event', payload: JsonOutput.toJson(payload)])
+        </script>
+
+    </actions>
+    <widgets>
+        <form-list name="RunProcessFormList" list="processList">
+            <field name="processKey">
+                <default-field title="Process Key">
+                    <display/>
+                </default-field>
+            </field>
+            <field name="jsonForProcessVariables">
+                <default-field title="JSON for process variables">
+                    <display/>
+                </default-field>
+            </field>
+            <field name="run">
+                <header-field title="Actions" >
+                </header-field>
+                <default-field>
+                    <link url="runProcess" text="Run" parameter-map="[processKey:processKey,jsonForProcessVariables:jsonForProcessVariables]"/>
+                </default-field></field>
+        </form-list>
+        <form-list name="RunProcessByEventFormList" list="eventList">
+            <field name="eventName">
+                <default-field title="Event Name">
+                    <display/>
+                </default-field>
+            </field>
+            <field name="payload">
+                <default-field title="Payload">
+                    <display/>
+                </default-field>
+            </field>
+            <field name="run">
+                <header-field title="Actions" >
+                </header-field>
+                <default-field>
+                    <link url="runProcessByEvent" text="Run" parameter-map="[eventName:eventName,payload: payload]"/>
+                </default-field></field>
+        </form-list>
+    </widgets>
+</screen>

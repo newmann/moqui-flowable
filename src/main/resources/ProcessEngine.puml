@@ -1,0 +1,30 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class ProcessEngines
+{
+Map<String, ProcessEngine> processEngines
+Map<String, EngineInfo> processEngineInfosByName
+Map<String, EngineInfo> processEngineInfosByResourceUrl
+List<EngineInfo> processEngineInfos
+init()
+}
+abstract class EventRegistryEngines
+
+interface ProcessEngine{
+getProcessEngineConfiguration()
+}
+interface Engine
+class ProcessEngineImpl{
+ProcessEngineImpl(ProcessEngineConfigurationImpl processEngineConfiguration)
+}
+
+interface EventRegistryEngine
+class EventRegistryEngineImpl
+
+Engine <|-- ProcessEngine
+ProcessEngine <|-- ProcessEngineImpl
+Engine <|-- EventRegistryEngine
+EventRegistryEngine <|-- EventRegistryEngineImpl
+
+@enduml

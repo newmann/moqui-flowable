@@ -1,0 +1,64 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class StandaloneProcessEngineConfiguration{
+
+}
+
+abstract class ProcessEngineConfigurationImpl{
+boolean disableEventRegistry;
+EventRegistryEventConsumer eventRegistryEventConsumer
+boolean eventRegistryStartProcessInstanceAsync = false;
+boolean eventRegistryUniqueProcessInstanceCheckWithLock = true;
+Duration eventRegistryUniqueProcessInstanceStartLockTime = Duration.ofMinutes(10);
+void afterInitEventRegistryEventBusConsumer()
+List<EngineConfigurator> getEngineSpecificEngineConfigurators()
+EngineConfigurator createDefaultEventRegistryEngineConfigurator()
+ProcessEngine buildProcessEngine()
+}
+
+abstract class ProcessEngineConfiguration{
+
+}
+abstract class AbstractEngineConfiguration{
+Map<String, EventRegistryEventConsumer> eventRegistryEventConsumers
+EngineConfigurator eventRegistryConfigurator;
+addEventRegistryEventConsumer(String key, EventRegistryEventConsumer eventRegistryEventConsumer)
+}
+class StandaloneEventRegistryEngineConfiguration
+class EventRegistryEngineConfiguration{
+EventRegistryEngine buildEventRegistryEngine()
+}
+
+AbstractEngineConfiguration <|--ProcessEngineConfiguration
+ProcessEngineConfiguration <|-- ProcessEngineConfigurationImpl
+ProcessEngineConfigurationImpl <|-- StandaloneProcessEngineConfiguration
+AbstractEngineConfiguration <|--EventRegistryEngineConfiguration
+EventRegistryEngineConfiguration <|--StandaloneEventRegistryEngineConfiguration
+
+
+abstract class ProcessEngines
+{
+Map<String, ProcessEngine> processEngines
+Map<String, EngineInfo> processEngineInfosByName
+Map<String, EngineInfo> processEngineInfosByResourceUrl
+List<EngineInfo> processEngineInfos
+init()
+}
+interface ProcessEngine{
+getProcessEngineConfiguration()
+}
+interface Engine
+class ProcessEngineImpl{
+ProcessEngineImpl(ProcessEngineConfigurationImpl processEngineConfiguration)
+}
+Engine <|-- ProcessEngine
+ProcessEngine <|-- ProcessEngineImpl
+
+class EventRegistryEngineConfigurator
+abstract class AbstractEngineConfigurator
+interface EngineConfigurator
+EngineConfigurator <|-- AbstractEngineConfigurator
+AbstractEngineConfigurator <|-- EventRegistryEngineConfigurator
+
+@enduml
